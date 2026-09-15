@@ -1,6 +1,5 @@
 {
   "framework": "nextjs",
-  "rootDirectory": "artifacts/nextjs",
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm build"
 }
