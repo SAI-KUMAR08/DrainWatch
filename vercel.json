@@ -3,7 +3,7 @@
   "framework": "vite",
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm --filter @workspace/drainwatch run build",
-  "outputDirectory": "artifacts/drainwatch/dist",
+  "outputDirectory": "dist",
   "functions": {
     "api/index.ts": {
       "runtime": "nodejs24.x",
