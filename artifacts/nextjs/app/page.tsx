@@ -4,8 +4,10 @@ import { useListPublicAlerts, useListPublicReports, useHealthCheck } from '@work
 import type { Report } from '@workspace/api-client-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { Bell, Navigation, ShieldCheck, Waves, Send, Search, RefreshCw, XCircle } from 'lucide-react';
-import { hazardName } from '@/lib/utils';
+import { Bell, Navigation, ShieldCheck, Waves, Send, Search, RefreshCw, XCircle, LogOut, User } from 'lucide-react';
+import { hazardName, storedSession } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 const OfficerMap = dynamic(() => import('@/components/officer-map'), { ssr: false });
 
@@ -20,7 +22,18 @@ export default function Home() {
   const alerts = useListPublicAlerts();
   const reports = useListPublicReports();
   const health = useHealthCheck();
+  const router = useRouter();
   const visibleReports = (reports.data?.slice(0, 12) ?? []) as Report[];
+  const [session, setSession] = useState<ReturnType<typeof storedSession>>({});
+
+  useEffect(() => { setSession(storedSession()); }, []);
+
+  function signOut() {
+    localStorage.removeItem('drainwatch-session');
+    setSession({});
+    router.push('/');
+  }
+
   return (
     <div className="app-shell">
       <header className="public-nav">
@@ -31,7 +44,18 @@ export default function Home() {
         <nav className="public-links" aria-label="Citizen navigation">
           <Link href="/track-report" data-testid="link-track-report">Track a report</Link>
           <Link href="/my-reports" data-testid="link-my-reports">My reports</Link>
-          <Link href="/login" className="btn btn-outline" data-testid="link-login">Sign in</Link>
+          {session.token ? (
+            <>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
+                <User size={14} />{session.name || session.email || 'Citizen'}
+              </span>
+              <button className="btn btn-outline" onClick={signOut} data-testid="button-signout" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <LogOut size={14} /> Sign out
+              </button>
+            </>
+          ) : (
+            <Link href="/login" className="btn btn-outline" data-testid="link-login">Sign in</Link>
+          )}
         </nav>
       </header>
       <main className="page-wrap">

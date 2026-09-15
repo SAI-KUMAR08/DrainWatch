@@ -74,20 +74,38 @@ export async function seedDemoReports() {
   if (Number(existing?.count ?? 0) > 0) return;
 
   const seed = [
-    { id: 'demo-hyd-001', hazardType: 'waterlogging', severity: 'critical', latitude: 17.4239, longitude: 78.4738, locationName: 'Tank Bund Road, Hyderabad', description: 'Water has reached the edge of the carriageway near the public promenade.', status: 'verified', verificationStatus: 'officer_verified', source: 'verified' },
-    { id: 'demo-hyd-002', hazardType: 'blocked_drain', severity: 'high', latitude: 17.4126, longitude: 78.4483, locationName: 'Banjara Hills Road No. 12', description: 'Drain grate is blocked with silt and plastic after overnight rain.', status: 'assigned', verificationStatus: 'pending_review', source: 'citizen' },
-    { id: 'demo-hyd-003', hazardType: 'open_manhole', severity: 'high', latitude: 17.4948, longitude: 78.3996, locationName: 'Kukatpally Housing Board', description: 'Open manhole reported beside the service road near the bus stop.', status: 'in_progress', verificationStatus: 'officer_verified', source: 'citizen' },
-    { id: 'demo-hyd-004', hazardType: 'sewage_overflow', severity: 'medium', latitude: 17.385, longitude: 78.4867, locationName: 'Mehdipatnam Ring Road', description: 'Overflow is affecting the pedestrian lane outside the market entrance.', status: 'reported', verificationStatus: 'pending_review', source: 'news' },
+    { id: 'demo-hyd-001', hazardType: 'waterlogging', severity: 'critical', latitude: 17.4239, longitude: 78.4738, locationName: 'Tank Bund Road, Hyderabad', description: 'Water has reached the edge of the carriageway near the public promenade. Vehicles are being diverted.', status: 'verified', verificationStatus: 'officer_verified', source: 'verified' },
+    { id: 'demo-hyd-002', hazardType: 'blocked_drain', severity: 'high', latitude: 17.4126, longitude: 78.4483, locationName: 'Banjara Hills Road No. 12', description: 'Drain grate completely blocked with silt and plastic waste after overnight heavy rain.', status: 'assigned', verificationStatus: 'pending_review', source: 'citizen' },
+    { id: 'demo-hyd-003', hazardType: 'open_manhole', severity: 'high', latitude: 17.4948, longitude: 78.3996, locationName: 'Kukatpally Housing Board Colony', description: 'Open manhole cover beside the service road near KPHB bus stop — safety hazard for pedestrians.', status: 'in_progress', verificationStatus: 'officer_verified', source: 'citizen' },
+    { id: 'demo-hyd-004', hazardType: 'sewage_overflow', severity: 'medium', latitude: 17.385, longitude: 78.4867, locationName: 'Mehdipatnam Ring Road', description: 'Sewage overflow affecting pedestrian lane outside the market entrance. Strong odour reported.', status: 'reported', verificationStatus: 'pending_review', source: 'news' },
+    { id: 'demo-hyd-005', hazardType: 'waterlogging', severity: 'high', latitude: 17.4401, longitude: 78.3489, locationName: 'Miyapur Metro Station Road', description: 'Underpass near Miyapur metro flooded knee-deep. Auto-rickshaws stranded. Residents requesting pumps.', status: 'verified', verificationStatus: 'officer_verified', source: 'citizen' },
+    { id: 'demo-hyd-006', hazardType: 'blocked_drain', severity: 'medium', latitude: 17.3616, longitude: 78.4747, locationName: 'Attapur Bridge, Rajendra Nagar', description: 'Drain running alongside the bridge is 80% silted. Flow is heavily restricted before next rain.', status: 'resolved', verificationStatus: 'officer_verified', source: 'citizen' },
+    { id: 'demo-hyd-007', hazardType: 'open_manhole', severity: 'critical', latitude: 17.4484, longitude: 78.3915, locationName: 'HITEC City Main Road', description: 'Two consecutive manhole covers missing on the main IT corridor road. Night-time accident risk is very high.', status: 'in_progress', verificationStatus: 'officer_verified', source: 'citizen' },
+    { id: 'demo-hyd-008', hazardType: 'sewage_overflow', severity: 'high', latitude: 17.3753, longitude: 78.4744, locationName: 'Tolichowki Junction', description: 'Sewage line burst under the road. Slick surface and health risk across a 50-metre stretch.', status: 'assigned', verificationStatus: 'officer_verified', source: 'news' },
+    { id: 'demo-hyd-009', hazardType: 'waterlogging', severity: 'low', latitude: 17.4065, longitude: 78.5068, locationName: 'LB Nagar Circle', description: 'Shallow pooling near the footpath. Likely to clear within 4 hours without intervention.', status: 'resolved', verificationStatus: 'officer_verified', source: 'citizen' },
+    { id: 'demo-hyd-010', hazardType: 'blocked_drain', severity: 'critical', latitude: 17.4597, longitude: 78.3723, locationName: 'Gachibowli Stadium Road', description: 'Main storm drain serving three colonies is fully blocked. Predicted flooding if rain exceeds 20mm tonight.', status: 'verified', verificationStatus: 'officer_verified', source: 'verified' },
+    { id: 'demo-hyd-011', hazardType: 'sewage_overflow', severity: 'low', latitude: 17.4271, longitude: 78.5015, locationName: 'Uppal Bus Depot Road', description: 'Minor overflow near the GHMC pipe junction. Self-limiting — monitoring requested.', status: 'reported', verificationStatus: 'pending_review', source: 'citizen' },
+    { id: 'demo-hyd-012', hazardType: 'open_manhole', severity: 'medium', latitude: 17.4339, longitude: 78.5004, locationName: 'Nagole Flyover Service Lane', description: 'Manhole cover partially lifted by passing heavy vehicle. Loose cover rattles under traffic.', status: 'assigned', verificationStatus: 'pending_review', source: 'citizen' },
+    { id: 'demo-hyd-013', hazardType: 'waterlogging', severity: 'high', latitude: 17.3493, longitude: 78.5527, locationName: 'Dilsukhnagar Bus Terminal', description: 'Bus bay and pedestrian island underwater. Several buses re-routed. Passengers stranded.', status: 'in_progress', verificationStatus: 'officer_verified', source: 'news' },
+    { id: 'demo-hyd-014', hazardType: 'blocked_drain', severity: 'medium', latitude: 17.4144, longitude: 78.4804, locationName: 'Himayat Nagar Main Road', description: 'Drain inlet near the Himayat Nagar crossroads choked with construction debris dumped overnight.', status: 'reported', verificationStatus: 'pending_review', source: 'citizen' },
   ] as const;
 
   const now = new Date();
   await db.insert(reportsTable).values(
     seed.map((item, index) => {
-      const risk = calculateRisk(item.severity, 4 - index, 4, now);
-      return { ...item, riskScore: risk.score, riskComponents: risk.components, isDemo: true, createdAt: new Date(now.getTime() - index * 75 * 60 * 1000), updatedAt: now };
+      const risk = calculateRisk(item.severity as Severity, Math.max(1, 5 - index % 5), 6, now);
+      return {
+        ...item,
+        riskScore: risk.score,
+        riskComponents: risk.components,
+        isDemo: true,
+        createdAt: new Date(now.getTime() - index * 50 * 60 * 1000),
+        updatedAt: new Date(now.getTime() - index * 20 * 60 * 1000),
+      };
     }),
   );
 }
+
 
 export async function insertCitizenReport(input: { hazard_type: string; description: string; location_name: string; latitude: number; longitude: number; reporter_email: string; }) {
   const [recentCount] = await db.select({ count: sql<number>`count(*)` }).from(reportsTable).where(sql`${reportsTable.createdAt} > now() - interval '24 hours'`);
