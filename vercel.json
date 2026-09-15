@@ -1,5 +1,6 @@
 {
-  "version": 2,
+  "framework": "nextjs",
+  "rootDirectory": "artifacts/nextjs",
   "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "node ./scripts/vercel-build-output.mjs"
+  "buildCommand": "pnpm build"
 }
