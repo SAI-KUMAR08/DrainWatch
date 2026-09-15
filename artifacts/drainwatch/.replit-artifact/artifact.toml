@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "DrainWatch"
+description = "A civic safety platform with a mobile-friendly public portal for reporting drainage hazards and a separate officer operations portal for reviewing incidents on a real Hyderabad map."
+version = "1.0.0"
+id = "artifacts/drainwatch"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22561
+
+[services.development]
+run = "pnpm --filter @workspace/drainwatch run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/drainwatch", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/drainwatch/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22561"
+BASE_PATH = "/"

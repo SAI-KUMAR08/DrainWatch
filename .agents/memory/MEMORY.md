@@ -1,0 +1,2 @@
+- [DrainWatch safety data](drainwatch-safety-data.md) — keep roles server-owned, demo fixtures labeled, risk scores backend-calculated, and unavailable providers explicit.
+- [Vercel and Windows support](vercel-windows.md) — deploy the static Vite client plus Express function, while keeping local scripts shell-independent.

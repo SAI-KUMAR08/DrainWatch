@@ -1,0 +1,815 @@
+# DRAINWATCH — CONSOLIDATED PRODUCT CORRECTION AND REDESIGN PROMPT
+
+## IMPORTANT: READ THIS ENTIRE PROMPT BEFORE MODIFYING ANY CODE
+
+You are upgrading the existing DrainWatch project.
+
+The current implementation has three major problems:
+
+1. The map looks artificial and does not resemble a real geographic map.
+2. The UI and information architecture are not sufficiently polished or practical.
+3. The civilian and government officer experiences are connected through the same account/application flow.
+
+These issues must be fixed together, but they must be implemented as three clearly separated workstreams:
+
+* **A. Realistic map redesign**
+* **B. Professional UI/UX redesign**
+* **C. Completely separate civilian and officer applications**
+
+Do not confuse these requirements.
+
+Do not merely rename existing pages or add two dashboard tabs. The result must be a properly structured civic safety platform.
+
+---
+
+# 1. FIRST: INSPECT THE EXISTING PROJECT
+
+Before modifying anything:
+
+1. Read the complete existing project documentation.
+2. Inspect the frontend architecture.
+3. Inspect the backend architecture.
+4. Inspect the database schemas and existing MongoDB integration.
+5. Inspect all authentication and authorization logic.
+6. Inspect all existing routes.
+7. Inspect the current map implementation.
+8. Inspect whether report data, coordinates, AI analysis, risk scores, and dashboard statistics are real or mocked.
+9. Run the existing application.
+10. Identify what can be reused and what must be replaced.
+11. Create a short implementation plan before editing.
+
+Do not blindly rewrite the project.
+
+Do not delete working functionality without a reason.
+
+Preserve existing valid business logic and database functionality unless a change is required for the architecture described below.
+
+---
+
+# 2. PRODUCT STRUCTURE — TWO SEPARATE APPLICATIONS
+
+DrainWatch must have two separate user experiences:
+
+## Application 1: Civilian/Public Portal
+
+This is for ordinary citizens who want to report public hazards.
+
+Suggested routes:
+
+```text
+/
+ /report
+ /my-reports
+ /track-report
+ /citizen/login
+ /citizen/register
+```
+
+The civilian portal should contain:
+
+* Public home page
+* Report a hazard
+* Citizen registration/login, if authentication is required
+* My submitted reports
+* Report tracking
+* Public safety alerts
+* Limited public map
+* Help/about page
+
+Citizens must not see officer features.
+
+Citizens must not see:
+
+* Officer dashboard
+* Government analytics
+* All reports from every user
+* Internal notes
+* Department assignments
+* News-management controls
+* Internal risk-engine administration
+* Other citizens' private information
+* Officer settings
+* Officer login controls inside the normal civilian dashboard
+
+---
+
+## Application 2: Government Officer Portal
+
+This is for authorized government officers and administrators.
+
+Suggested routes:
+
+```text
+/officer/login
+/officer/dashboard
+/officer/map
+/officer/reports
+/officer/reports/:id
+/officer/news-intelligence
+/officer/analytics
+/officer/assignments
+/officer/audit-logs
+/officer/settings
+```
+
+The officer portal must have:
+
+* Separate officer login
+* Separate officer layout
+* Separate navigation
+* Real map-first dashboard
+* All authorized hazard reports
+* Risk-based prioritization
+* News intelligence
+* Rainfall/weather information
+* Report verification
+* Department assignment
+* Status management
+* Resolution tracking
+* Analytics
+* Audit logs
+
+The officer portal must not be a page inside a citizen account.
+
+---
+
+# 3. STRICT AUTHENTICATION SEPARATION
+
+This is a mandatory security requirement.
+
+Civilian and officer authentication must be separate from the user's perspective and enforced by the backend.
+
+## Civilian accounts
+
+A civilian can:
+
+* Register as a civilian
+* Log in through the civilian login
+* Submit reports
+* View their own reports
+* Track their own report status
+* View permitted public information
+
+A civilian cannot:
+
+* Access officer routes
+* Access officer APIs
+* View all reports
+* Change their account type to officer
+* Access internal analytics
+* Manage report assignments
+* Run news scans
+* Modify risk settings
+
+## Officer accounts
+
+An officer must:
+
+* Log in through the officer login page
+* Have an officer account created or approved through a secure process
+* Receive officer permissions only after backend validation
+* Access the officer dashboard and authorized officer APIs
+
+Public registration must never create an officer account.
+
+Do not provide a public dropdown that allows a user to choose:
+
+```text
+Civilian
+Officer
+Admin
+```
+
+Do not trust a role supplied by the frontend.
+
+Do not use a frontend variable such as:
+
+```javascript
+isOfficer = true;
+```
+
+as a security mechanism.
+
+Do not allow a user to become an officer by editing local storage, cookies, URL parameters, or frontend state.
+
+---
+
+# 4. BACKEND AUTHORIZATION
+
+Frontend route hiding is not enough.
+
+Every officer API must validate:
+
+* Authentication
+* Token/session validity
+* Account type
+* Role
+* Permission
+* Resource access
+
+Use separate API namespaces where practical:
+
+```text
+/api/public/*
+/api/citizen/*
+/api/officer/*
+/api/auth/citizen/*
+/api/auth/officer/*
+```
+
+Example permissions:
+
+```text
+Civilian:
+  POST /api/reports                    allowed
+  GET  /api/citizen/reports/mine       allowed
+  GET  /api/officer/reports            denied
+  PATCH /api/officer/reports/:id       denied
+  GET  /api/officer/news               denied
+  GET  /api/officer/analytics         denied
+
+Officer:
+  GET  /api/officer/reports            allowed
+  GET  /api/officer/map                allowed
+  PATCH /api/officer/reports/:id       allowed if authorized
+  GET  /api/officer/news               allowed
+  GET  /api/officer/analytics          allowed
+```
+
+A civilian token/session must return `401` or `403` when calling officer-only APIs.
+
+A civilian must not be able to access `/officer/dashboard`, even by manually entering the URL.
+
+---
+
+# 5. SEPARATE UI LAYOUTS
+
+## 5.1 Civilian layout
+
+The civilian layout should be simple, friendly, mobile-first, and action-oriented.
+
+Navigation:
+
+```text
+Home
+Report a Hazard
+My Reports
+Track Report
+Public Alerts
+About
+Login/Profile
+```
+
+Primary action:
+
+> Report a Hazard
+
+The civilian interface should not overwhelm users with technical risk calculations or administrative information.
+
+## 5.2 Officer layout
+
+The officer layout should be operational, information-dense, and map-focused.
+
+Navigation:
+
+```text
+Dashboard
+Live Map
+Reports
+Critical Incidents
+News Intelligence
+Rainfall/Weather
+Assignments
+Analytics
+Audit Logs
+Settings
+Logout
+```
+
+The officer dashboard must feel like a professional municipal/GIS control center, not like a civilian profile page.
+
+---
+
+# 6. MAP REDESIGN — REPLACE THE ARTIFICIAL MAP
+
+The current map looks unrealistic, decorative, and odd.
+
+This must be fixed at the implementation level.
+
+Do not simply change the map colors or add more animation.
+
+Remove or replace any:
+
+* Decorative SVG map
+* Fake road drawing
+* Artificial city background
+* Static map image
+* Random marker positioning
+* CSS-based map illustration
+* Percentage-based marker placement
+* Hardcoded fake neighborhood shapes
+* Neon road effects
+* Futuristic grid background
+* Random coordinate jitter
+* Fake map labels
+
+The primary map must be a real geographic map.
+
+---
+
+# 7. USE A REAL MAP PROVIDER
+
+Preferred implementation:
+
+```text
+Leaflet
++
+React-Leaflet
++
+OpenStreetMap tiles
+```
+
+Alternative:
+
+```text
+MapLibre GL JS
++
+A valid vector-tile provider such as MapTiler
+```
+
+Use a real map provider with real geographic tiles.
+
+The map must display actual:
+
+* Indian geography
+* Hyderabad roads
+* Streets
+* Neighborhoods
+* Road labels where available
+* Water bodies
+* Geographic boundaries
+* Real geographic features
+
+Include proper attribution according to the map provider's terms.
+
+Do not use a fake map image as the primary map.
+
+Do not expose private map API keys in frontend code.
+
+---
+
+# 8. MAP CENTER, ZOOM, AND BEHAVIOR
+
+The initial officer map should focus on:
+
+```text
+Hyderabad, Telangana, India
+```
+
+The map must support:
+
+* Zoom in/out
+* Pan
+* Search location
+* Locate map position
+* Reset to Hyderabad
+* Fit map to visible reports
+* Responsive resizing
+* Correct rendering after page refresh
+* Correct rendering on mobile and desktop
+
+The map must use actual latitude and longitude values.
+
+Do not use:
+
+```css
+left: 45%;
+top: 52%;
+```
+
+for report positioning.
+
+Do not generate random coordinates.
+
+If a report has no valid location:
+
+* Do not place it inaccurately.
+* Mark the report as location incomplete.
+* Allow correction or review by an authorized officer.
+
+---
+
+# 9. MAP MARKERS AND RISK COLORS
+
+Every marker must represent a real stored report, news incident, or verified incident.
+
+Risk colors:
+
+```text
+0–24    Green    Low
+25–49   Yellow   Moderate
+50–74   Orange   High
+75–100  Red      Critical
+```
+
+The risk score must come from the backend risk engine.
+
+Do not hardcode marker colors independently from the risk score.
+
+Markers must:
+
+* Use actual geographic coordinates
+* Be visible without excessive glow
+* Avoid covering the entire map
+* Support clustering
+* Open a popup or detail panel
+* Display risk level and report information
+* Remain correctly positioned during zoom and pan
+
+Do not rely only on color. Include labels, icons, or popup information for accessibility.
+
+---
+
+# 10. MARKER CLUSTERING AND MAP LAYERS
+
+Implement marker clustering for dense locations.
+
+Requirements:
+
+* Nearby markers automatically form clusters.
+* Cluster count is visible.
+* Clicking a cluster zooms into its contents.
+* Individual markers appear at suitable zoom levels.
+* Clustering does not change original coordinates.
+
+Support separate map layers where real data exists:
+
+1. Civilian reports
+2. News-derived incidents
+3. Verified incidents
+4. Critical-risk reports
+5. Risk hotspots
+6. Optional rainfall/waterlogging layer
+
+Each layer should be toggleable.
+
+Do not display a heatmap or rainfall layer using fabricated data.
+
+If a data source is unavailable, display a clear unavailable state.
+
+---
+
+# 11. OFFICER MAP-FIRST DASHBOARD
+
+The map must be the central visual element of the officer home page.
+
+Recommended layout:
+
+```text
+┌───────────────────────────────────────────────────────────────┐
+│ DrainWatch Officer Portal     Search   Alerts   Profile       │
+├───────────────┬───────────────────────────────────────────────┤
+│               │                                               │
+│ Dashboard     │                                               │
+│ Live Map      │             REAL HYDERABAD MAP                │
+│ Reports       │                                               │
+│ News          │       Actual risk-colored markers              │
+│ Analytics     │       Clusters and incident layers             │
+│ Assignments   │                                               │
+│ Settings      │                                               │
+│               │                                               │
+├───────────────┴───────────────────────────────────────────────┤
+│ Filters | Risk Legend | Selected Report Details               │
+└───────────────────────────────────────────────────────────────┘
+```
+
+The map should occupy the majority of the dashboard's central area.
+
+Add:
+
+* Risk legend
+* Search
+* Filters
+* Layer toggles
+* Map controls
+* Selected report detail panel
+* Critical incident queue
+* Recent reports feed
+
+Do not make the map a small decorative card.
+
+---
+
+# 12. MAP MARKER DETAIL PANEL
+
+When an officer clicks a marker, show:
+
+* Report ID
+* Hazard type
+* Risk score
+* Risk level
+* Status
+* Verification state
+* Report date
+* Address
+* Latitude/longitude
+* Source
+* Description
+* AI classification, if available
+* News references, if linked
+* Weather/rainfall context, if available
+* View full report action
+* Verify/reject action
+* Assign action
+* Mark in progress action
+* Resolve action
+
+Internal notes must remain visible only to authorized officers.
+
+---
+
+# 13. UI/UX REDESIGN
+
+Improve the entire UI without compromising the actual workflow.
+
+## Design principles
+
+* Professional civic-tech appearance
+* Clear visual hierarchy
+* Consistent spacing
+* Consistent typography
+* Accessible contrast
+* Responsive layout
+* Clear loading states
+* Clear empty states
+* Clear error states
+* No unnecessary animations
+* No excessive glowing effects
+* No clutter
+* No fake statistics
+* No confusing navigation
+
+The UI should look trustworthy and practical rather than futuristic for the sake of appearance.
+
+## Civilian UI style
+
+Prioritize:
+
+* Simplicity
+* Mobile usability
+* Large report button
+* Short forms
+* Clear progress indicators
+* Easy location selection
+* Clear report confirmation
+* Simple report tracking
+
+## Officer UI style
+
+Prioritize:
+
+* Map-first layout
+* Operational clarity
+* Dense but readable information
+* Filters
+* Risk prioritization
+* Critical incident visibility
+* Fast access to report details
+* Status and assignment workflows
+* Auditability
+
+---
+
+# 14. PUBLIC MAP VERSUS OFFICER MAP
+
+Both portals may use the same real map technology, but they must not expose the same data.
+
+## Civilian map
+
+Show only permitted public information:
+
+* Public safety alerts
+* Nearby public hazards
+* Limited report details
+* General risk zones if approved for public display
+* No private citizen information
+* No internal notes
+* No department assignments
+* No sensitive operational information
+
+## Officer map
+
+Show authorized operational information:
+
+* All authorized reports
+* Exact coordinates
+* Risk scores and components
+* Verification state
+* News incidents
+* Rainfall context
+* Assignments
+* Internal status
+* Officer notes
+* Audit information
+
+Do not simply display the officer map to civilians.
+
+---
+
+# 15. REAL DATA REQUIREMENTS
+
+The map and UI must use real backend data.
+
+Do not use:
+
+* Random reports
+* Random coordinates
+* Random risk scores
+* Random AI confidence
+* Random rainfall
+* Random news articles
+* Hardcoded dashboard statistics
+
+If demo data is needed:
+
+* Use deterministic seed data.
+* Mark it with `is_demo: true`.
+* Display a visible “Demo data” label.
+* Keep it separate from real production data.
+* Never present demo data as live government or citizen data.
+
+---
+
+# 16. REPORT AND MAP DATA FLOW
+
+The intended flow is:
+
+```text
+Civilian submits a real report
+        ↓
+Backend validates the report
+        ↓
+Real coordinates are stored
+        ↓
+Image is analyzed by AI, if configured
+        ↓
+Risk engine calculates an explainable score
+        ↓
+Report is stored in MongoDB
+        ↓
+Officer map fetches the report from the backend
+        ↓
+Marker appears at the correct real-world location
+        ↓
+Marker color reflects the calculated risk level
+        ↓
+Officer can verify, assign, update, or resolve it
+```
+
+The report must not exist only in browser memory.
+
+Refreshing the page must not delete reports.
+
+The database must be the source of truth.
+
+---
+
+# 17. SECURITY AND PRIVACY
+
+Implement:
+
+* Separate civilian and officer authentication
+* Server-side role verification
+* Protected officer routes
+* Protected officer APIs
+* Secure file uploads
+* Input validation
+* Rate limiting
+* CORS restrictions
+* Secure environment variables
+* No API keys in frontend code
+* No private citizen data in public responses
+* Audit logs for officer actions
+* Protection against privilege escalation
+
+---
+
+# 18. ACCEPTANCE TESTS
+
+Do not mark this task complete until all of the following are verified.
+
+## Separation tests
+
+* Civilian registration creates only a civilian account.
+* Civilian cannot access `/officer/dashboard`.
+* Civilian cannot call officer APIs.
+* Civilian cannot modify their role to officer.
+* Officer login is separate.
+* Officer registration is not public.
+* Officer can access the officer dashboard.
+* Officer pages do not appear in civilian navigation.
+* Frontend state or local storage cannot bypass authorization.
+
+## Map tests
+
+* Real map tiles load.
+* Hyderabad streets and geographic features are visible.
+* Markers use real latitude/longitude values.
+* Markers remain correctly positioned during zoom and pan.
+* Marker clustering works.
+* Filters update map results.
+* Empty data shows an empty state.
+* Map works after refresh.
+* Map works on mobile and desktop.
+* No decorative SVG map remains as the primary map.
+* No random coordinates are generated.
+
+## UI tests
+
+* Civilian workflow is simple and mobile-friendly.
+* Officer workflow is map-first.
+* Loading, error, and empty states exist.
+* Risk legend is consistent.
+* Report detail panel works.
+* Navigation is not confusing.
+* UI does not expose unauthorized information.
+
+## Data tests
+
+* A civilian report is saved to MongoDB.
+* The report appears in the officer map.
+* The report remains after refresh.
+* Risk score is calculated by the backend.
+* Marker color matches the calculated risk level.
+* Officer status changes are persisted.
+* Officer actions are recorded in audit logs.
+
+---
+
+# 19. IMPLEMENTATION ORDER
+
+Implement in this exact order:
+
+1. Inspect the current project.
+2. Document the existing architecture and problems.
+3. Separate civilian and officer route groups.
+4. Separate civilian and officer authentication.
+5. Add backend authorization.
+6. Separate civilian and officer layouts.
+7. Replace the fake map with Leaflet/OpenStreetMap or MapLibre with a valid provider.
+8. Connect the map to real backend coordinates.
+9. Implement marker clustering and risk colors.
+10. Redesign the officer map-first dashboard.
+11. Simplify and redesign the civilian portal.
+12. Connect report persistence and map updates.
+13. Verify all data permissions.
+14. Test authentication, map, UI, and report workflows.
+15. Update documentation.
+
+Do not implement the two portals as two tabs inside one shared account.
+
+Do not implement the map as a decorative illustration.
+
+Do not mark the task complete just because both pages render.
+
+---
+
+# FINAL REQUIRED RESULT
+
+The final product must have:
+
+```text
+Separate Civilian Portal
+    ↓
+Citizens report hazards and track their own reports
+
+Separate Officer Portal
+    ↓
+Authorized officers view all permitted incidents on a real Indian map
+
+Shared backend/database internally
+    ↓
+Strict server-side permissions
+
+Real map
+    ↓
+Actual Hyderabad roads, locations, and geographic features
+
+Risk engine
+    ↓
+Real, explainable risk scores
+
+Professional UI
+    ↓
+Simple for civilians, operational for officers
+```
+
+The most important priorities are:
+
+1. Correct security separation
+2. Realistic map implementation
+3. Real data and accurate coordinates
+4. Professional, usable UI
+5. Reliable report-to-officer workflow
+
+Do not sacrifice correctness for visual effects.
