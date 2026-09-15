@@ -10,7 +10,7 @@
  */
 
 import { cp, mkdir, writeFile, rm } from 'node:fs/promises';
-import { execSync } from 'node:child_process';
+import { execSync, spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -48,37 +48,39 @@ async function main() {
   const funcDir = path.join(vercelOutput, 'functions', 'api', 'index.func');
   await mkdir(funcDir, { recursive: true });
 
-  // Use esbuild (installed as devDep of artifacts/api-server, binary is
-  // available at repo-root node_modules/.bin/esbuild via pnpm workspace linking).
+  // Use esbuild binary (available at repo-root node_modules/.bin/esbuild
+  // via pnpm workspace linking from artifacts/api-server devDependencies).
   const esbuildBin = path.join(root, 'node_modules', '.bin', 'esbuild');
   const outFile = path.join(funcDir, 'index.mjs');
   const entryPoint = path.join(root, 'api', 'index.ts');
 
-  const esbuildArgs = [
-    JSON.stringify(entryPoint),
-    '--bundle',
-    '--platform=node',
-    '--format=esm',
-    `--outfile=${JSON.stringify(outFile)}`,
-    // Native modules and unused transports that cannot be bundled:
-    '--external:pg-native',
-    '--external:pino-pretty', // only used in dev (logger.ts guards NODE_ENV)
-    '--external:*.node',
-    // CJS compat banner (same pattern as artifacts/api-server/build.mjs):
-    `--banner:js=${[
-      "import { createRequire as __crReq } from 'node:module';",
-      "import __bPath from 'node:path';",
-      "import __bUrl from 'node:url';",
-      "globalThis.require = __crReq(import.meta.url);",
-      "globalThis.__filename = __bUrl.fileURLToPath(import.meta.url);",
-      "globalThis.__dirname = __bPath.dirname(globalThis.__filename);",
-    ].join(' ')}`,
+  // CJS compat shim — same pattern as artifacts/api-server/build.mjs.
+  const bannerJs = [
+    "import { createRequire as __crReq } from 'node:module';",
+    "import __bPath from 'node:path';",
+    "import __bUrl from 'node:url';",
+    "globalThis.require = __crReq(import.meta.url);",
+    "globalThis.__filename = __bUrl.fileURLToPath(import.meta.url);",
+    "globalThis.__dirname = __bPath.dirname(globalThis.__filename);",
   ].join(' ');
 
-  execSync(`${JSON.stringify(esbuildBin)} ${esbuildArgs}`, {
-    stdio: 'inherit',
-    cwd: root,
-  });
+  // Use spawnSync with an array — avoids all shell quoting / space issues.
+  const esbuildResult = spawnSync(
+    esbuildBin,
+    [
+      entryPoint,
+      '--bundle',
+      '--platform=node',
+      '--format=esm',
+      `--outfile=${outFile}`,
+      '--external:pg-native',
+      '--external:pino-pretty', // dev only (logger.ts guards NODE_ENV)
+      '--external:*.node',
+      `--banner:js=${bannerJs}`,
+    ],
+    { stdio: 'inherit', cwd: root },
+  );
+  if (esbuildResult.status !== 0) process.exit(esbuildResult.status ?? 1);
 
   // ── 5. Write .vc-config.json for the function ────────────────────────────
   await writeFile(
