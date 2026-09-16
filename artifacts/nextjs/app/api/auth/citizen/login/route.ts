@@ -27,7 +27,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Enter a valid email and password' }, { status: 400 });
     }
 
-    const email = parsed.data.email.toLowerCase();
+    const email = parsed.data.email.toLowerCase().trim();
     const password = parsed.data.password;
 
     // Look up registered citizen via raw SQL (avoids any Drizzle schema mismatch)
@@ -37,8 +37,8 @@ export async function POST(request: Request) {
         sql`SELECT id, name, email, password_hash FROM citizens WHERE email = ${email} LIMIT 1`
       );
       citizen = result.rows[0] as typeof citizen;
-    } catch {
-      // citizens table may not exist yet — fall through to demo credentials
+    } catch (dbErr) {
+      console.error('[citizen/login] DB lookup error:', dbErr);
     }
 
     if (citizen) {
@@ -70,8 +70,11 @@ export async function POST(request: Request) {
 
     return Response.json({ error: 'No account found with that email. Please register first.' }, { status: 401 });
 
-  } catch (err) {
-    console.error('[citizen/login] Unhandled error:', err);
-    return Response.json({ error: 'Login failed due to a server error. Please try again.' }, { status: 500 });
+  } catch (err: any) {
+    const drizzleMsg = err instanceof Error ? err.message : String(err);
+    const causeMsg = err?.cause?.message || '';
+    const detail = causeMsg ? `${drizzleMsg} | pg: ${causeMsg}` : drizzleMsg;
+    console.error('[citizen/login] Unhandled error:', detail);
+    return Response.json({ error: 'Login failed due to a server error. Please try again.', detail }, { status: 500 });
   }
 }

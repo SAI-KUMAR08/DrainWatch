@@ -43,50 +43,26 @@ export async function POST(request: Request) {
     }
 
     const { email, otp } = parsed.data;
-    const key = email.toLowerCase();
-
-    // Ensure tables exist (all raw SQL to avoid any Drizzle schema mismatch)
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS pending_registrations (
-        email TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        password TEXT NOT NULL,
-        otp TEXT NOT NULL,
-        expires_at TIMESTAMPTZ NOT NULL
-      )
-    `).catch(() => {});
-
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS citizens (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL,
-        password_hash TEXT NOT NULL,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-      )
-    `).catch(() => {});
-
-    await db.execute(sql`
-      CREATE INDEX IF NOT EXISTS citizens_email_idx ON citizens(email)
-    `).catch(() => {});
+    const key = email.toLowerCase().trim();
 
     // Read pending registration
     const pendingResult = await db.execute(
-      sql`SELECT name, password, otp, expires_at FROM pending_registrations WHERE email = ${key} LIMIT 1`
+      sql`SELECT name, password, otp, expires_at, (expires_at < NOW()) AS is_expired FROM pending_registrations WHERE email = ${key} LIMIT 1`
     );
 
     const pending = pendingResult.rows[0] as {
-      name: string; password: string; otp: string; expires_at: string;
+      name: string; password: string; otp: string; expires_at: string; is_expired?: boolean;
     } | undefined;
 
     if (!pending) {
       return Response.json(
-        { error: 'No pending registration found. Please click "Register" again to get a new code.' },
+        { error: 'No pending registration found for this email. Please register again to get a new code.' },
         { status: 404 },
       );
     }
 
-    if (Date.now() > new Date(pending.expires_at).getTime()) {
+    const isExpired = pending.is_expired ?? (Date.now() > new Date(pending.expires_at).getTime());
+    if (isExpired) {
       await db.execute(sql`DELETE FROM pending_registrations WHERE email = ${key}`).catch(() => {});
       return Response.json(
         { error: 'Your verification code has expired. Please register again.' },
@@ -94,37 +70,45 @@ export async function POST(request: Request) {
       );
     }
 
-    if (otp !== String(pending.otp)) {
+    if (otp.trim() !== String(pending.otp).trim()) {
       return Response.json({ error: 'Incorrect verification code. Please try again.' }, { status: 401 });
     }
 
     // OTP matched — remove pending row
     await db.execute(sql`DELETE FROM pending_registrations WHERE email = ${key}`).catch(() => {});
 
-    // Check if citizen already exists
+    // Save or update citizen
+    const name = String(pending.name);
+    const passwordHash = await hashPassword(pending.password);
+
     const existingResult = await db.execute(
       sql`SELECT id FROM citizens WHERE email = ${key} LIMIT 1`
     );
 
     if (existingResult.rows.length === 0) {
-      const passwordHash = await hashPassword(pending.password);
       const id = randomUUID();
-      const name = String(pending.name);
       await db.execute(
         sql`INSERT INTO citizens (id, name, email, password_hash) VALUES (${id}, ${name}, ${key}, ${passwordHash})`
       );
+    } else {
+      await db.execute(
+        sql`UPDATE citizens SET name = ${name}, password_hash = ${passwordHash} WHERE email = ${key}`
+      );
     }
 
-    const name = String(pending.name);
     const token = createSession({ role: 'citizen', email: key, name });
 
     return Response.json({ token, role: 'citizen', name, email: key });
 
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error('[register/verify] Unhandled error:', msg);
+  } catch (err: any) {
+    const drizzleMsg = err instanceof Error ? err.message : String(err);
+    const causeMsg = err?.cause?.message || (err?.cause ? String(err.cause) : '');
+    const pgDetail = err?.detail || err?.cause?.detail || '';
+    const detailParts = [drizzleMsg, causeMsg ? `pg: ${causeMsg}` : '', pgDetail ? `detail: ${pgDetail}` : ''].filter(Boolean);
+    const detail = detailParts.join(' | ');
+    console.error('[register/verify] Unhandled error:', detail);
     return Response.json(
-      { error: 'Registration failed due to a server error. Please try again.', detail: msg },
+      { error: 'Registration failed due to a server error. Please try again.', detail },
       { status: 500 },
     );
   }

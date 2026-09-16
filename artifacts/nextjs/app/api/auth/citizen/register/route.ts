@@ -27,42 +27,28 @@ export async function POST(request: Request) {
     }
 
     const { name, email, password } = parsed.data;
-    const key = email.toLowerCase();
+    const key = email.toLowerCase().trim();
     const otp = generateOtp();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
-    // Ensure table exists — no .catch() so failures surface properly
-    try {
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS pending_registrations (
-          email TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          password TEXT NOT NULL,
-          otp TEXT NOT NULL,
-          expires_at TIMESTAMPTZ NOT NULL
-        )
-      `);
-    } catch {
-      // Table already exists or concurrent creation — safe to continue
-    }
-
-    // Upsert pending registration
+    // Upsert pending registration (tables are pre-created in Supabase)
     await db.execute(sql`
       INSERT INTO pending_registrations (email, name, password, otp, expires_at)
-      VALUES (${key}, ${name}, ${password}, ${otp}, ${expiresAt})
+      VALUES (${key}, ${name}, ${password}, ${otp}, NOW() + INTERVAL '15 minutes')
       ON CONFLICT (email) DO UPDATE SET
-        name     = EXCLUDED.name,
-        password = EXCLUDED.password,
-        otp      = EXCLUDED.otp,
+        name       = EXCLUDED.name,
+        password   = EXCLUDED.password,
+        otp        = EXCLUDED.otp,
         expires_at = EXCLUDED.expires_at
     `);
 
     return Response.json({ email, otp });
 
-  } catch (err) {
+  } catch (err: any) {
     const drizzleMsg = err instanceof Error ? err.message : String(err);
-    const causeMsg = err instanceof Error && err.cause instanceof Error ? err.cause.message : '';
-    const detail = causeMsg ? `${drizzleMsg} | pg: ${causeMsg}` : drizzleMsg;
+    const causeMsg = err?.cause?.message || (err?.cause ? String(err.cause) : '');
+    const pgDetail = err?.detail || err?.cause?.detail || '';
+    const detailParts = [drizzleMsg, causeMsg ? `pg: ${causeMsg}` : '', pgDetail ? `detail: ${pgDetail}` : ''].filter(Boolean);
+    const detail = detailParts.join(' | ');
     console.error('[register] Error:', detail);
     return Response.json(
       { error: 'Registration failed due to a server error. Please try again.', detail },
