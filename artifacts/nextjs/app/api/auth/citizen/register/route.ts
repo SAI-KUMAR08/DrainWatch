@@ -60,10 +60,12 @@ export async function POST(request: Request) {
     return Response.json({ email, otp });
 
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error('[register] Unhandled error:', msg);
+    const drizzleMsg = err instanceof Error ? err.message : String(err);
+    const causeMsg = err instanceof Error && err.cause instanceof Error ? err.cause.message : '';
+    const detail = causeMsg ? `${drizzleMsg} | pg: ${causeMsg}` : drizzleMsg;
+    console.error('[register] Error:', detail);
     return Response.json(
-      { error: 'Registration failed due to a server error. Please try again.', detail: msg },
+      { error: 'Registration failed due to a server error. Please try again.', detail },
       { status: 500 },
     );
   }
