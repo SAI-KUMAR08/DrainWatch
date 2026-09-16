@@ -23,6 +23,7 @@ export const reportsTable = pgTable(
     locationName: text("location_name").notNull(),
     description: text("description").notNull(),
     reporterEmail: text("reporter_email"),
+    photoUrl: text("photo_url"),
     riskScore: integer("risk_score").notNull(),
     riskComponents: jsonb("risk_components")
       .$type<{

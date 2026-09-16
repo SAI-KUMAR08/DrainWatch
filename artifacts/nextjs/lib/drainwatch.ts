@@ -354,13 +354,48 @@ export async function seedDemoReports() {
 }
 
 
-export async function insertCitizenReport(input: { hazard_type: string; description: string; location_name: string; latitude: number; longitude: number; reporter_email: string; }) {
+export async function insertCitizenReport(input: {
+  hazard_type: string;
+  description: string;
+  location_name: string;
+  latitude: number;
+  longitude: number;
+  reporter_email: string;
+  photo_url?: string | null;
+}) {
+  // Ensure the photo_url column exists (safe no-op if already present)
+  try {
+    await db.execute(
+      sql`ALTER TABLE reports ADD COLUMN IF NOT EXISTS photo_url text`,
+    );
+  } catch {
+    // Column already exists or DB doesn't support IF NOT EXISTS — ignore
+  }
+
   const [recentCount] = await db.select({ count: sql<number>`count(*)` }).from(reportsTable).where(sql`${reportsTable.createdAt} > now() - interval '24 hours'`);
   const [historicalCount] = await db.select({ count: sql<number>`count(*)` }).from(reportsTable);
   const severity: Severity = input.hazard_type === 'open_manhole' ? 'high' : input.hazard_type === 'waterlogging' ? 'medium' : 'low';
   const risk = calculateRisk(severity, Number(recentCount?.count ?? 0) + 1, Number(historicalCount?.count ?? 0) + 1);
   const now = new Date();
-  const [created] = await db.insert(reportsTable).values({ id: randomUUID(), hazardType: input.hazard_type, severity, verificationStatus: 'pending_review', latitude: input.latitude, longitude: input.longitude, locationName: input.location_name, description: input.description, reporterEmail: input.reporter_email, riskScore: risk.score, riskComponents: risk.components, status: 'reported', source: 'citizen', isDemo: false, createdAt: now, updatedAt: now }).returning();
+  const [created] = await db.insert(reportsTable).values({
+    id: randomUUID(),
+    hazardType: input.hazard_type,
+    severity,
+    verificationStatus: 'pending_review',
+    latitude: input.latitude,
+    longitude: input.longitude,
+    locationName: input.location_name,
+    description: input.description,
+    reporterEmail: input.reporter_email,
+    photoUrl: input.photo_url ?? null,
+    riskScore: risk.score,
+    riskComponents: risk.components,
+    status: 'reported',
+    source: 'citizen',
+    isDemo: false,
+    createdAt: now,
+    updatedAt: now,
+  }).returning();
   return created;
 }
 
