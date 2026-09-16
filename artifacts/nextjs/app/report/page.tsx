@@ -423,10 +423,11 @@ export default function ReportPage() {
               </div>
             )}
 
-            <div className="notice" style={{ marginBottom: 18 }}>
-              <Info size={16} />
-              <span>Reports may be marked as demo data when the municipal server is in demonstration mode.</span>
-            </div>
+            {!locationSet && (
+              <p className="help" style={{ marginBottom: 14, color: 'hsl(var(--muted-foreground))' }}>
+                📍 Please pin your location on the map or click &quot;Use my location&quot; above to submit.
+              </p>
+            )}
 
             <div className="actions" style={{ justifyContent: 'flex-end' }}>
               <Link href="/" className="btn btn-outline" data-testid="link-cancel-report">Cancel</Link>
