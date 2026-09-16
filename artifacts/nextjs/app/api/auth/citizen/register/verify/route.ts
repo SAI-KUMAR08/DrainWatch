@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { z } from 'zod';
-import { pendingRegistrations } from '../route';
+import { pendingRegistrations } from '@/lib/pending-registrations';
 import { createSession } from '@/lib/auth';
 
 const VerifyBody = z.object({
