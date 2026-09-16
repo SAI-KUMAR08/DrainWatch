@@ -31,7 +31,13 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const parsed = CreateCitizenReportBody.safeParse(body);
   if (!parsed.success) {
-    return Response.json({ error: parsed.error.message }, { status: 400 });
+    const errorDetails = parsed.error.issues
+      .map((i) => {
+        const field = i.path.join('.');
+        return `${field ? field + ': ' : ''}${i.message}`;
+      })
+      .join(', ');
+    return Response.json({ error: errorDetails || 'Invalid report data. Please check the form fields.' }, { status: 400 });
   }
 
   const photoUrl = typeof body === 'object' && body !== null && 'photo_url' in body && typeof (body as any).photo_url === 'string' ? (body as any).photo_url : null;

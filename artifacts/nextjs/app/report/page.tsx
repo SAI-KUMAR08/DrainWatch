@@ -342,14 +342,14 @@ export default function ReportPage() {
                 <textarea
                   id="report-description"
                   className="field"
-                  minLength={10}
+                  minLength={3}
                   placeholder="E.g. water is knee-deep outside the pharmacy entrance, drain cover missing since Monday…"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   required
                   data-testid="input-report-description"
                 />
-                <span className="help">A specific detail helps teams verify the location faster.</span>
+                <span className="help">Minimum 3 characters. A specific detail helps teams verify the location faster.</span>
               </div>
             </div>
 
@@ -406,7 +406,20 @@ export default function ReportPage() {
             {/* ── Submit ──────────────────────────────────────────── */}
             {createReport.isError && (
               <div className="auth-error" style={{ marginBottom: 14 }} data-testid="status-report-error">
-                This report could not be sent. Please check the location and try again.
+                {(() => {
+                  const err = createReport.error as any;
+                  const serverError = err?.response?.data?.error || err?.response?.data?.message || err?.message;
+                  if (serverError && typeof serverError === 'string') {
+                    try {
+                      const parsed = JSON.parse(serverError);
+                      if (Array.isArray(parsed)) {
+                        return parsed.map((p: any) => p.message || p.path?.join('.')).join('; ');
+                      }
+                    } catch {}
+                    return serverError;
+                  }
+                  return 'This report could not be sent. Please check the details and try again.';
+                })()}
               </div>
             )}
 
@@ -420,7 +433,7 @@ export default function ReportPage() {
               <button
                 className="btn btn-primary"
                 type="submit"
-                disabled={createReport.isPending || !locationSet || !description.trim()}
+                disabled={createReport.isPending || !locationSet || description.trim().length < 3}
                 data-testid="button-submit-report"
               >
                 {createReport.isPending ? 'Sending report…' : 'Send report'} <Send size={15} />

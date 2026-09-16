@@ -160,15 +160,15 @@ export const ListCitizenReportsResponse = zod.array(ListCitizenReportsResponseIt
 /**
  * @summary Submit a public hazard report
  */
-export const createCitizenReportBodyDescriptionMin = 10;
+export const createCitizenReportBodyDescriptionMin = 3;
 
-export const createCitizenReportBodyLocationNameMin = 2;
+export const createCitizenReportBodyLocationNameMin = 1;
 
-export const createCitizenReportBodyLatitudeMin = 16;
-export const createCitizenReportBodyLatitudeMax = 18;
+export const createCitizenReportBodyLatitudeMin = -90;
+export const createCitizenReportBodyLatitudeMax = 90;
 
-export const createCitizenReportBodyLongitudeMin = 77;
-export const createCitizenReportBodyLongitudeMax = 79;
+export const createCitizenReportBodyLongitudeMin = -180;
+export const createCitizenReportBodyLongitudeMax = 180;
 
 
 

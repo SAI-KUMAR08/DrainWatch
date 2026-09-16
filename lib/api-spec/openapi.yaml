@@ -469,18 +469,18 @@ components:
           $ref: "#/components/schemas/HazardType"
         description:
           type: string
-          minLength: 10
+          minLength: 3
         location_name:
           type: string
-          minLength: 2
+          minLength: 1
         latitude:
           type: number
-          minimum: 16
-          maximum: 18
+          minimum: -90
+          maximum: 90
         longitude:
           type: number
-          minimum: 77
-          maximum: 79
+          minimum: -180
+          maximum: 180
       required: [hazard_type, description, location_name, latitude, longitude]
     ReportStatusUpdate:
       type: object
