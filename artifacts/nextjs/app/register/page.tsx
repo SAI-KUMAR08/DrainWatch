@@ -52,7 +52,7 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setDetailsError(data.error ?? 'Something went wrong. Please try again.');
+        setDetailsError((data.error ?? 'Something went wrong.') + (data.detail ? ` [${data.detail}]` : ''));
         return;
       }
       setDisplayedOtp(data.otp as string);
@@ -76,7 +76,7 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setOtpError(data.error ?? 'Verification failed. Please try again.');
+        setOtpError((data.error ?? 'Verification failed.') + (data.detail ? ` [${data.detail}]` : ''));
         return;
       }
       localStorage.setItem('drainwatch-session', JSON.stringify(data));

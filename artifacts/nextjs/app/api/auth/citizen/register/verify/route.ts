@@ -121,9 +121,10 @@ export async function POST(request: Request) {
     return Response.json({ token, role: 'citizen', name, email: key });
 
   } catch (err) {
-    console.error('[register/verify] Unhandled error:', err);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[register/verify] Unhandled error:', msg);
     return Response.json(
-      { error: 'Registration failed due to a server error. Please try again.' },
+      { error: 'Registration failed due to a server error. Please try again.', detail: msg },
       { status: 500 },
     );
   }
