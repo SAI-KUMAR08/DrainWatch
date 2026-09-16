@@ -1,7 +1,7 @@
 // Re-export the drainwatch DB operations so API routes import from one place.
 // The actual implementation lives in the shared api-server lib.
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import { db, auditLogsTable, reportsTable, type Report } from '@workspace/db';
 
 type Severity = 'critical' | 'high' | 'medium' | 'low' | 'unknown';
@@ -64,6 +64,7 @@ export function toReportResponse(report: Report) {
     description: report.description,
     source: report.source,
     is_demo: report.isDemo,
+    photo_url: report.photoUrl ?? null,
     created_at: report.createdAt,
     updated_at: report.updatedAt,
   };
@@ -403,7 +404,12 @@ export async function getReports(filters?: { status?: string; severity?: string;
   const conditions = [];
   if (filters?.status) conditions.push(eq(reportsTable.status, filters.status));
   if (filters?.severity) conditions.push(eq(reportsTable.severity, filters.severity));
-  return db.select().from(reportsTable).where(conditions.length ? and(...conditions) : undefined).orderBy(desc(reportsTable.riskScore), desc(reportsTable.createdAt)).limit(filters?.limit ?? 100);
+  return db
+    .select()
+    .from(reportsTable)
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(asc(reportsTable.isDemo), desc(reportsTable.createdAt))
+    .limit(filters?.limit ?? 100);
 }
 
 export async function getReport(id: string) {

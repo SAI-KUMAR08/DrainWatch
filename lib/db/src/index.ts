@@ -8,6 +8,16 @@ const { Pool } = pg;
 let _pool: pg.Pool | null = null;
 let _db: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
+function normalizeDatabaseUrl(url: string): string {
+  if (url.includes("db.pwhmljruumktzdmihpsr.supabase.co")) {
+    return url.replace(
+      /postgres:Drainwatch_6781@db\.pwhmljruumktzdmihpsr\.supabase\.co(:\d+)?/,
+      "postgres.pwhmljruumktzdmihpsr:Drainwatch_6781@aws-0-ap-southeast-1.pooler.supabase.com:6543",
+    );
+  }
+  return url;
+}
+
 function getPool(): pg.Pool {
   if (!_pool) {
     if (!process.env.DATABASE_URL) {
@@ -15,8 +25,9 @@ function getPool(): pg.Pool {
         "DATABASE_URL must be set. Did you forget to provision a database?",
       );
     }
+    const connectionString = normalizeDatabaseUrl(process.env.DATABASE_URL);
     _pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString,
       // Supabase requires SSL — rejectUnauthorized:false accepts the self-signed cert
       ssl: { rejectUnauthorized: false },
     });

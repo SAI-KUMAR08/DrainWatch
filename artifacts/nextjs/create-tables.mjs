@@ -3,7 +3,7 @@
 import pg from 'pg';
 const { Client } = pg;
 
-const DB_URL = process.env.DATABASE_URL || 'postgresql://postgres:Drainwatch_6781@db.pwhmljruumktzdmihpsr.supabase.co:5432/postgres';
+const DB_URL = process.env.DATABASE_URL || 'postgresql://postgres.pwhmljruumktzdmihpsr:Drainwatch_6781@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres';
 
 const client = new Client({ connectionString: DB_URL, ssl: { rejectUnauthorized: false } });
 

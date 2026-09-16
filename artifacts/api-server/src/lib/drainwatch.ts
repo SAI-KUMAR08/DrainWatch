@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db, auditLogsTable, reportsTable, type Report } from "@workspace/db";
 
 type Severity = "critical" | "high" | "medium" | "low" | "unknown";
@@ -201,7 +201,7 @@ export async function getReports(filters?: {
     .select()
     .from(reportsTable)
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(desc(reportsTable.riskScore), desc(reportsTable.createdAt))
+    .orderBy(asc(reportsTable.isDemo), desc(reportsTable.createdAt))
     .limit(filters?.limit ?? 100);
 }
 

@@ -29,9 +29,11 @@ export async function POST(request: Request) {
     return Response.json({ error: parsed.error.message }, { status: 400 });
   }
 
+  const photoUrl = typeof body === 'object' && body !== null && 'photo_url' in body && typeof (body as any).photo_url === 'string' ? (body as any).photo_url : null;
   const report = await insertCitizenReport({
     ...parsed.data,
     reporter_email: result.auth.email,
+    photo_url: photoUrl,
   });
 
   return Response.json(CreateCitizenReportResponse.parse(toReportResponse(report!)), { status: 201 });
