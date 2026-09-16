@@ -15,7 +15,11 @@ function getPool(): pg.Pool {
         "DATABASE_URL must be set. Did you forget to provision a database?",
       );
     }
-    _pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    _pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      // Supabase requires SSL — rejectUnauthorized:false accepts the self-signed cert
+      ssl: { rejectUnauthorized: false },
+    });
   }
   return _pool;
 }

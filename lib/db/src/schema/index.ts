@@ -59,7 +59,20 @@ export const auditLogsTable = pgTable(
   (table) => [index("audit_logs_created_at_idx").on(table.createdAt)],
 );
 
+export const citizensTable = pgTable(
+  "citizens",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
+    passwordHash: text("password_hash").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("citizens_email_idx").on(table.email)],
+);
+
 export const insertReportSchema = createInsertSchema(reportsTable);
 export type InsertReport = z.infer<typeof insertReportSchema>;
 export type Report = typeof reportsTable.$inferSelect;
 export type AuditLog = typeof auditLogsTable.$inferSelect;
+export type Citizen = typeof citizensTable.$inferSelect;
