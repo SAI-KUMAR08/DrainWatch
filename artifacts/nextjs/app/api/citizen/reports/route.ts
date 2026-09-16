@@ -3,17 +3,22 @@ export const dynamic = 'force-dynamic';
 import { ListCitizenReportsResponse, CreateCitizenReportBody, CreateCitizenReportResponse } from '@workspace/api-zod';
 import { requireRole } from '@/lib/auth';
 import { db, reportsTable } from '@workspace/db';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import { toReportResponse, insertCitizenReport } from '@/lib/drainwatch';
 
 export async function GET(request: Request) {
   const result = requireRole(request, 'citizen');
   if ('error' in result) return result.error;
 
+  const email = result.auth.email.toLowerCase().trim();
   const reports = await db
     .select()
     .from(reportsTable)
-    .where(eq(reportsTable.reporterEmail, result.auth.email))
+    .where(
+      email === 'resident@drainwatch.in'
+        ? sql`(${reportsTable.reporterEmail} = ${email} OR ${reportsTable.isDemo} = true)`
+        : sql`lower(${reportsTable.reporterEmail}) = ${email}`
+    )
     .orderBy(desc(reportsTable.createdAt));
 
   return Response.json(ListCitizenReportsResponse.parse(reports.map(toReportResponse)));

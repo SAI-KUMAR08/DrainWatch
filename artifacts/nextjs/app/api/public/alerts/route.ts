@@ -31,7 +31,7 @@ export async function GET() {
         id: 'alert-hyd-general',
         title: 'Monsoon safety reminder',
         message: 'Report blocked drains before travelling. Avoid walking near open manholes after dark. Use the DrainWatch app to flag hazards in real time so response teams can act faster.',
-        severity: 'advisory',
+        severity: 'info',
         issued_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
       },
     ]),
