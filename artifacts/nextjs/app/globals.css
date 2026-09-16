@@ -250,6 +250,8 @@ textarea.field { resize:vertical; min-height:120px; }
 .auth-error { background:hsl(var(--destructive) / .09); color:hsl(var(--destructive)); border:1px solid hsl(var(--destructive) / .22); padding:10px; border-radius:8px; font-size:12px; margin-bottom:15px; }
 .auth-switch { text-align:center; color:hsl(var(--muted-foreground)); font-size:12px; margin-top:20px; }
 .auth-switch a { color:hsl(var(--primary)); font-weight:800; }
+.otp-display { font-size:38px; font-weight:800; letter-spacing:.22em; text-align:center; padding:20px 24px; background:hsl(var(--secondary)); border:2px dashed hsl(var(--primary)); border-radius:14px; color:hsl(var(--primary)); font-family:var(--app-font-mono); margin:20px 0; }
+.otp-hint { text-align:center; font-size:12px; color:hsl(var(--muted-foreground)); margin-bottom:18px; }
 .track-box { max-width:760px; margin:35px auto 0; }
 .track-search { display:flex; gap:9px; background:hsl(var(--card)); border:1px solid hsl(var(--card-border)); padding:8px; border-radius:13px; }
 .track-search .field { flex:1; border:0; }

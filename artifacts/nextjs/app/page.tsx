@@ -54,7 +54,10 @@ export default function Home() {
               </button>
             </>
           ) : (
-            <Link href="/login" className="btn btn-outline" data-testid="link-login">Sign in</Link>
+            <>
+              <Link href="/register" className="btn btn-outline" data-testid="link-register">Register</Link>
+              <Link href="/login" className="btn btn-primary" data-testid="link-login">Sign in</Link>
+            </>
           )}
         </nav>
       </header>

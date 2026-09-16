@@ -39,7 +39,10 @@ export default function LoginPage() {
           <div className="form-group"><label htmlFor="login-email">Email address</label><input id="login-email" className="field" autoComplete="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required data-testid="input-login-email" /></div>
           <div className="form-group"><label htmlFor="login-password">Password</label><input id="login-password" className="field" autoComplete="current-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required data-testid="input-login-password" /></div>
           <button className="btn btn-primary" style={{ width: '100%', marginTop: 7 }} disabled={login.isPending} data-testid="button-login">{login.isPending ? 'Signing in…' : 'Continue'} <ArrowRight size={15} /></button>
-          <div className="auth-switch">Citizen and officer accounts use this same secure sign-in.</div>
+          <div className="auth-switch">
+            Don&apos;t have an account?{' '}
+            <Link href="/register" data-testid="link-to-register">Register</Link>
+          </div>
         </form>
       </div>
     </div>

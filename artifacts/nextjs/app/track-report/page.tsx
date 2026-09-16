@@ -1,18 +1,15 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import { useGetCitizenReport, getGetCitizenReportQueryKey } from '@workspace/api-client-react';
-import { Search, ShieldCheck, RefreshCw, XCircle } from 'lucide-react';
-import { shortId, hazardName, fmt } from '@/lib/utils';
+import { Search, ShieldCheck, RefreshCw, XCircle, LogOut, User } from 'lucide-react';
+import { storedSession, shortId, hazardName, fmt } from '@/lib/utils';
 
 function Loading({ label = 'Loading live information' }: { label?: string }) { return <div className="loading-state" data-testid="status-loading"><div className="skeleton" style={{ width: 130, margin: '0 auto 10px' }} /><span>{label}</span></div>; }
 function ErrorState({ onRetry }: { onRetry?: () => void }) { return <div className="error-state" data-testid="status-error"><XCircle size={28} color="hsl(var(--destructive))" style={{ margin: '0 auto 10px' }} /><strong>Live information is unavailable</strong><span>Try again in a moment.</span>{onRetry && <div><button className="btn btn-outline" style={{ marginTop: 15 }} onClick={onRetry} data-testid="button-retry"><RefreshCw size={14} /> Retry</button></div>}</div>; }
-
-function PublicNav() {
-  return <header className="public-nav"><Link href="/" className="brand"><span className="brand-mark" /><span><span className="brand-word">DrainWatch</span><span className="brand-sub">Hyderabad civic safety</span></span></Link><nav className="public-links"><Link href="/track-report">Track a report</Link><Link href="/my-reports">My reports</Link><Link href="/login" className="btn btn-outline">Sign in</Link></nav></header>;
-}
 
 function TrackReportContent() {
   const searchParams = useSearchParams();
@@ -50,9 +47,45 @@ function TrackReportContent() {
 }
 
 export default function TrackReportPage() {
+  const router = useRouter();
+  const [session, setSession] = useState<ReturnType<typeof storedSession>>({});
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setSession(storedSession());
+    setMounted(true);
+  }, []);
+
+  function signOut() {
+    localStorage.removeItem('drainwatch-session');
+    setSession({});
+    router.push('/');
+  }
+
   return (
     <div className="app-shell">
-      <PublicNav />
+      <header className="public-nav">
+        <Link href="/" className="brand"><span className="brand-mark" /><span><span className="brand-word">DrainWatch</span><span className="brand-sub">Hyderabad civic safety</span></span></Link>
+        <nav className="public-links">
+          <Link href="/track-report">Track a report</Link>
+          <Link href="/my-reports">My reports</Link>
+          {mounted && session.token ? (
+            <>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
+                <User size={14} />{session.name || session.email || 'Citizen'}
+              </span>
+              <button className="btn btn-outline" onClick={signOut} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <LogOut size={14} /> Sign out
+              </button>
+            </>
+          ) : mounted ? (
+            <>
+              <Link href="/register" className="btn btn-outline">Register</Link>
+              <Link href="/login" className="btn btn-primary">Sign in</Link>
+            </>
+          ) : null}
+        </nav>
+      </header>
       <main className="page-wrap">
         <Suspense fallback={<Loading />}>
           <TrackReportContent />

@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useListCitizenReports } from '@workspace/api-client-react';
-import { ClipboardList, ArrowRight, Send, RefreshCw, XCircle } from 'lucide-react';
+import { ClipboardList, ArrowRight, Send, RefreshCw, XCircle, LogOut, User } from 'lucide-react';
 import { storedSession, shortId, hazardName, fmt } from '@/lib/utils';
 
 function Loading() { return <div className="loading-state" data-testid="status-loading"><div className="skeleton" style={{ width: 130, margin: '0 auto 10px' }} /><span>Loading live information</span></div>; }
@@ -11,15 +12,55 @@ function ErrorState({ onRetry }: { onRetry?: () => void }) { return <div classNa
 
 export default function CitizenReportsPage() {
   const reports = useListCitizenReports();
-  const session = useMemo(storedSession, []);
+  const router = useRouter();
+  const [session, setSession] = useState<ReturnType<typeof storedSession>>({});
+  const [mounted, setMounted] = useState(false);
 
-  if (session.role !== 'citizen') {
-    return <div className="app-shell"><header className="public-nav"><Link href="/" className="brand"><span className="brand-mark" /><span><span className="brand-word">DrainWatch</span><span className="brand-sub">Hyderabad civic safety</span></span></Link><nav className="public-links"><Link href="/track-report">Track a report</Link><Link href="/my-reports">My reports</Link><Link href="/login" className="btn btn-outline">Sign in</Link></nav></header><main className="page-wrap"><div className="empty" style={{ maxWidth: 600, margin: '100px auto' }}><ClipboardList size={29} style={{ margin: '0 auto 10px', color: 'hsl(var(--primary))' }} /><strong>Sign in to view your reports</strong><span>Your report history is private to your citizen account.</span><div><Link href="/login" className="btn btn-primary" style={{ marginTop: 17 }}>Sign in</Link></div></div><footer className="footer"><span>DrainWatch · Hyderabad civic safety network</span></footer></main></div>;
+  useEffect(() => {
+    setSession(storedSession());
+    setMounted(true);
+  }, []);
+
+  function signOut() {
+    localStorage.removeItem('drainwatch-session');
+    setSession({});
+    router.push('/');
+  }
+
+  function NavBar() {
+    return (
+      <header className="public-nav">
+        <Link href="/" className="brand"><span className="brand-mark" /><span><span className="brand-word">DrainWatch</span><span className="brand-sub">Hyderabad civic safety</span></span></Link>
+        <nav className="public-links">
+          <Link href="/track-report">Track a report</Link>
+          <Link href="/my-reports">My reports</Link>
+          {mounted && session.token ? (
+            <>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
+                <User size={14} />{session.name || session.email || 'Citizen'}
+              </span>
+              <button className="btn btn-outline" onClick={signOut} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <LogOut size={14} /> Sign out
+              </button>
+            </>
+          ) : mounted ? (
+            <>
+              <Link href="/register" className="btn btn-outline">Register</Link>
+              <Link href="/login" className="btn btn-primary">Sign in</Link>
+            </>
+          ) : null}
+        </nav>
+      </header>
+    );
+  }
+
+  if (mounted && session.role !== 'citizen') {
+    return <div className="app-shell"><NavBar /><main className="page-wrap"><div className="empty" style={{ maxWidth: 600, margin: '100px auto' }}><ClipboardList size={29} style={{ margin: '0 auto 10px', color: 'hsl(var(--primary))' }} /><strong>Sign in to view your reports</strong><span>Your report history is private to your citizen account.</span><div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 17 }}><Link href="/register" className="btn btn-outline">Register</Link><Link href="/login" className="btn btn-primary">Sign in</Link></div></div><footer className="footer"><span>DrainWatch · Hyderabad civic safety network</span></footer></main></div>;
   }
 
   return (
     <div className="app-shell">
-      <header className="public-nav"><Link href="/" className="brand"><span className="brand-mark" /><span><span className="brand-word">DrainWatch</span><span className="brand-sub">Hyderabad civic safety</span></span></Link><nav className="public-links"><Link href="/track-report">Track a report</Link><Link href="/my-reports">My reports</Link><Link href="/login" className="btn btn-outline">Sign in</Link></nav></header>
+      <NavBar />
       <main className="page-wrap">
         <div className="content-head" style={{ paddingTop: 47 }}>
           <div><div className="eyebrow">Citizen portal</div><h2>My reports</h2><p>A simple record of every signal you have sent.</p></div>
