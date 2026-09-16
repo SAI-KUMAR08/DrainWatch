@@ -31,16 +31,20 @@ export async function POST(request: Request) {
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
-    // Ensure table exists
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS pending_registrations (
-        email TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        password TEXT NOT NULL,
-        otp TEXT NOT NULL,
-        expires_at TIMESTAMPTZ NOT NULL
-      )
-    `).catch(() => {});
+    // Ensure table exists — no .catch() so failures surface properly
+    try {
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS pending_registrations (
+          email TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          password TEXT NOT NULL,
+          otp TEXT NOT NULL,
+          expires_at TIMESTAMPTZ NOT NULL
+        )
+      `);
+    } catch {
+      // Table already exists or concurrent creation — safe to continue
+    }
 
     // Upsert pending registration
     await db.execute(sql`
